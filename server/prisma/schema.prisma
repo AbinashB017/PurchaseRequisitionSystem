@@ -1,0 +1,131 @@
+// Prisma schema for Purchase Requisition System
+// Matches the exact data model specified in the project brief
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  requester
+  approver
+}
+
+enum RequisitionStatus {
+  draft
+  submitted
+  approved
+  rejected
+  ordered
+  received
+}
+
+enum AuditEventType {
+  created
+  status_change
+  receipt
+  comment
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password_hash  String
+  role           Role
+  approval_limit Decimal? @db.Decimal(14, 2) // Only set for approvers
+  name           String
+  created_at     DateTime @default(now())
+
+  // Relations
+  owned_requisitions      Requisition[]         @relation("RequisitionOwner")
+  approver_assignments    RequisitionApprover[]
+  audit_events            AuditEvent[]
+  alert_dismissals        AlertDismissal[]
+
+  @@map("users")
+}
+
+model Requisition {
+  id             String             @id @default(uuid())
+  title          String
+  vendor_name    String
+  department     String
+  needed_by_date DateTime           @db.Date
+  status         RequisitionStatus  @default(draft)
+  owner_id       String
+  archived_at    DateTime?
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+
+  // Relations
+  owner              User                  @relation("RequisitionOwner", fields: [owner_id], references: [id])
+  line_items         LineItem[]
+  approvers          RequisitionApprover[]
+  audit_events       AuditEvent[]
+  alert_dismissals   AlertDismissal[]
+
+  @@map("requisitions")
+}
+
+model LineItem {
+  id              String  @id @default(uuid())
+  requisition_id  String
+  description     String
+  ordered_qty     Decimal @db.Decimal(14, 2)
+  unit_price      Decimal @db.Decimal(14, 2)
+  received_qty    Decimal @default(0) @db.Decimal(14, 2)
+
+  // Relations
+  requisition Requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+
+  @@map("line_items")
+}
+
+model RequisitionApprover {
+  requisition_id String
+  approver_id    String
+
+  // Relations
+  requisition Requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  approver    User        @relation(fields: [approver_id], references: [id], onDelete: Cascade)
+
+  @@id([requisition_id, approver_id])
+  @@map("requisition_approvers")
+}
+
+model AuditEvent {
+  id              String         @id @default(uuid())
+  requisition_id  String
+  type            AuditEventType
+  actor_id        String
+  old_status      RequisitionStatus?
+  new_status      RequisitionStatus?
+  reason          String?          // Used for rejection reasons
+  comment_text    String?
+  metadata        Json?            // e.g. which line item and how much was received
+  created_at      DateTime         @default(now())
+
+  // Relations
+  requisition Requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  actor       User        @relation(fields: [actor_id], references: [id])
+
+  @@map("audit_events")
+}
+
+model AlertDismissal {
+  requisition_id         String
+  approver_id            String
+  dismissed_at           DateTime  @default(now())
+  dismissed_for_needed_by DateTime @db.Date // Snapshot of needed_by_date at dismissal time
+
+  // Relations
+  requisition Requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  approver    User        @relation(fields: [approver_id], references: [id], onDelete: Cascade)
+
+  @@id([requisition_id, approver_id])
+  @@map("alert_dismissals")
+}
