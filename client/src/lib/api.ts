@@ -80,4 +80,36 @@ export const authApi = {
   me: () => request('/api/auth/me'),
 };
 
+export const requisitionApi = {
+  listMyRequisitions: () => request('/api/requisitions'),
+  getRequisition: (id: string) => request(`/api/requisitions/${id}`),
+  create: (body: any) => request('/api/requisitions', { method: 'POST', body }),
+  update: (id: string, body: any) => request(`/api/requisitions/${id}`, { method: 'PUT', body }),
+  addLineItem: (id: string, body: any) => request(`/api/requisitions/${id}/lines`, { method: 'POST', body }),
+  updateLineItem: (id: string, lineId: string, body: any) => request(`/api/requisitions/${id}/lines/${lineId}`, { method: 'PUT', body }),
+  removeLineItem: (id: string, lineId: string) => request(`/api/requisitions/${id}/lines/${lineId}`, { method: 'DELETE' }),
+
+  // Lifecycle actions
+  submit: (id: string) => request(`/api/requisitions/${id}/submit`, { method: 'POST' }),
+  approve: (id: string) => request(`/api/requisitions/${id}/approve`, { method: 'POST' }),
+  reject: (id: string, reason: string) => request(`/api/requisitions/${id}/reject`, { method: 'POST', body: { reason } }),
+  order: (id: string) => request(`/api/requisitions/${id}/order`, { method: 'POST' }),
+  extendNeededBy: (id: string, needed_by_date: string) => request(`/api/requisitions/${id}/extend-needed-by`, { method: 'POST', body: { needed_by_date } }),
+  receive: (id: string, line_item_id: string, received_quantity: number) => request(`/api/requisitions/${id}/receive`, { method: 'POST', body: { line_item_id, received_quantity } }),
+
+  // Comments & Timeline
+  addComment: (id: string, comment: string) => request(`/api/requisitions/${id}/comments`, { method: 'POST', body: { comment } }),
+  getAuditEvents: (id: string) => request(`/api/requisitions/${id}/audit-events`),
+
+  // Approver assignments
+  getApprovers: (id: string) => request(`/api/requisitions/${id}/approvers`),
+  addApprover: (id: string, approver_id: string) => request(`/api/requisitions/${id}/approvers`, { method: 'POST', body: { approver_id } }),
+  removeApprover: (id: string, approverId: string) => request(`/api/requisitions/${id}/approvers/${approverId}`, { method: 'DELETE' }),
+};
+
+export const queueApi = {
+  getSubmittedQueue: () => request('/api/queues/submitted'),
+  getAssignedToMe: () => request('/api/queues/assigned-to-me'),
+};
+
 export default request;

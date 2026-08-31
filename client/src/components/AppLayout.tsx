@@ -46,21 +46,42 @@ export default function AppLayout() {
                   Dashboard
                 </Link>
 
+                {user?.role === 'requester' && (
+                  <Link
+                    to="/requisitions"
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      location.pathname.startsWith('/requisitions')
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                    }`}
+                  >
+                    My Requisitions
+                  </Link>
+                )}
+
                 {user?.role === 'approver' && (
-                  <div className="relative">
+                  <>
                     <Link
-                      to="/alerts"
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
-                        isActive('/alerts')
+                      to="/queues/submitted"
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname === '/queues/submitted'
                           ? 'bg-brand-50 text-brand-700'
                           : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
                       }`}
                     >
-                      Alerts
-                      {/* Alert badge placeholder — will be wired to real count in a later phase */}
-                      <span className="sr-only">alert count placeholder</span>
+                      Submitted Queue
                     </Link>
-                  </div>
+                    <Link
+                      to="/queues/assigned"
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname === '/queues/assigned'
+                          ? 'bg-brand-50 text-brand-700'
+                          : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                      }`}
+                    >
+                      Assigned to Me
+                    </Link>
+                  </>
                 )}
               </div>
             </div>

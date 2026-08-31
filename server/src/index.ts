@@ -26,6 +26,14 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+import requisitionRoutes from './routes/requisitions';
+app.use('/api/requisitions', requisitionRoutes);
+import lifecycleRoutes from './routes/lifecycle';
+app.use('/api/requisitions', lifecycleRoutes);
+import approverRoutes from './routes/approvers';
+app.use('/api/requisitions', approverRoutes);
+// Queue routes are nested under /api so we mount them at the top level
+app.use('/api', approverRoutes);
 
 // Start server
 app.listen(PORT, () => {

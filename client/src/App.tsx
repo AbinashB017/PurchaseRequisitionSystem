@@ -6,6 +6,11 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 
+import RequisitionsPage from './pages/RequisitionsPage';
+import RequisitionFormPage from './pages/RequisitionFormPage';
+import RequisitionDetailPage from './pages/RequisitionDetailPage';
+import ApproverQueuePage from './pages/ApproverQueuePage';
+
 function App() {
   return (
     <AuthProvider>
@@ -24,7 +29,12 @@ function App() {
             }
           >
             <Route path="/" element={<HomePage />} />
-            {/* Future routes will go here */}
+            <Route path="/requisitions" element={<RequisitionsPage />} />
+            <Route path="/requisitions/new" element={<RequisitionFormPage />} />
+            <Route path="/requisitions/:id" element={<RequisitionDetailPage />} />
+            <Route path="/requisitions/:id/edit" element={<RequisitionFormPage />} />
+            <Route path="/queues/submitted" element={<ApproverQueuePage />} />
+            <Route path="/queues/assigned" element={<ApproverQueuePage assignedOnly />} />
           </Route>
 
           {/* Catch-all */}
