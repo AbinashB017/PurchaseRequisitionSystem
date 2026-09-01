@@ -469,4 +469,70 @@ router.get('/:id/audit-events', async (req: Request<{ id: string }>, res: Respon
   }
 });
 
+/**
+ * POST /api/requisitions/:id/archive
+ * Owner or any approver. Sets archived_at = now().
+ */
+router.post('/:id/archive', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const requisition = await prisma.requisition.findUnique({ where: { id } });
+    if (!requisition) {
+      res.status(404).json({ error: 'Requisition not found' });
+      return;
+    }
+    // Check access: owner or any approver
+    if (req.user!.role !== 'approver' && requisition.owner_id !== req.user!.id) {
+      res.status(403).json({ error: 'Only the owner or an approver can archive this requisition' });
+      return;
+    }
+    if (requisition.archived_at) {
+      res.status(400).json({ error: 'Requisition is already archived' });
+      return;
+    }
+    const updated = await prisma.requisition.update({
+      where: { id },
+      data: { archived_at: new Date() },
+      include: { line_items: true }
+    });
+    res.json({ ...updated, total: computeTotal(updated.line_items) });
+  } catch (error) {
+    console.error('Archive error:', error);
+    res.status(500).json({ error: 'Failed to archive requisition' });
+  }
+});
+
+/**
+ * POST /api/requisitions/:id/restore
+ * Owner or any approver. Sets archived_at = null.
+ */
+router.post('/:id/restore', async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const requisition = await prisma.requisition.findUnique({ where: { id } });
+    if (!requisition) {
+      res.status(404).json({ error: 'Requisition not found' });
+      return;
+    }
+    // Check access: owner or any approver
+    if (req.user!.role !== 'approver' && requisition.owner_id !== req.user!.id) {
+      res.status(403).json({ error: 'Only the owner or an approver can restore this requisition' });
+      return;
+    }
+    if (!requisition.archived_at) {
+      res.status(400).json({ error: 'Requisition is not archived' });
+      return;
+    }
+    const updated = await prisma.requisition.update({
+      where: { id },
+      data: { archived_at: null },
+      include: { line_items: true }
+    });
+    res.json({ ...updated, total: computeTotal(updated.line_items) });
+  } catch (error) {
+    console.error('Restore error:', error);
+    res.status(500).json({ error: 'Failed to restore requisition' });
+  }
+});
+
 export default router;

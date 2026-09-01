@@ -83,18 +83,18 @@ export default function RequisitionFormPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div>
+      <div className="ledger-section pb-6 border-b-0">
         <Link to={isEditing ? `/requisitions/${id}` : '/requisitions'} className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-4 inline-block">
           &larr; Back
         </Link>
-        <h1>{isEditing ? 'Edit Requisition' : 'Create Requisition'}</h1>
-        <p className="mt-1 text-surface-500">
+        <h1 className="text-3xl font-serif text-surface-900">{isEditing ? 'Edit Requisition' : 'Create Requisition'}</h1>
+        <p className="mt-2 text-surface-500">
           {isEditing ? 'Update the details of your draft requisition.' : 'Start a new purchase request.'}
         </p>
       </div>
 
-      <div className="card p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="border-t border-surface-200 pt-8 mt-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {error && (
             <div className="flex items-start gap-3 p-3.5 rounded-lg bg-red-50 border border-red-200">
               <svg className="w-5 h-5 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

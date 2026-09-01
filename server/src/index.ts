@@ -3,6 +3,12 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
+import requisitionRoutes from './routes/requisitions';
+import lifecycleRoutes from './routes/lifecycle';
+import approverRoutes from './routes/approvers';
+import queueRoutes from './routes/queues';
+import exportRoutes from './routes/exports';
+import dashboardRoutes from './routes/dashboard';
 
 // Load environment variables
 dotenv.config();
@@ -26,14 +32,12 @@ app.get('/api/health', (_req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-import requisitionRoutes from './routes/requisitions';
-app.use('/api/requisitions', requisitionRoutes);
-import lifecycleRoutes from './routes/lifecycle';
-app.use('/api/requisitions', lifecycleRoutes);
-import approverRoutes from './routes/approvers';
-app.use('/api/requisitions', approverRoutes);
-// Queue routes are nested under /api so we mount them at the top level
-app.use('/api', approverRoutes);
+app.use('/api/requisitions', requisitionRoutes);   // CRUD + search/paginate
+app.use('/api/requisitions', lifecycleRoutes);     // submit, approve, reject, order, receive, etc.
+app.use('/api/requisitions', approverRoutes);      // /:id/approvers assignments
+app.use('/api/queues', queueRoutes);               // /api/queues/submitted, /api/queues/assigned-to-me
+app.use('/api', exportRoutes);                     // /api/bulk-approve, /api/export/ordered.csv
+app.use('/api', dashboardRoutes);                  // /api/dashboard, /api/alerts, /api/alerts/count
 
 // Start server
 app.listen(PORT, () => {

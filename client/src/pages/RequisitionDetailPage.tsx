@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { requisitionApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import StatusDot from '../components/StatusDot';
 
 export default function RequisitionDetailPage() {
   const { id } = useParams();
@@ -137,6 +138,8 @@ export default function RequisitionDetailPage() {
   const handleSubmit = () => handleAction(() => requisitionApi.submit(id!));
   const handleApprove = () => handleAction(() => requisitionApi.approve(id!));
   const handleOrder = () => handleAction(() => requisitionApi.order(id!));
+  const handleArchive = () => handleAction(() => requisitionApi.archive(id!));
+  const handleRestore = () => handleAction(() => requisitionApi.restore(id!));
 
   const handleReject = async () => {
     if (!rejectReason.trim()) return;
@@ -227,29 +230,24 @@ export default function RequisitionDetailPage() {
   if (loading) return <p className="text-surface-500">Loading...</p>;
   if (error || !requisition) return <p className="text-red-500">{error || 'Not found'}</p>;
 
-  const statusColors: Record<string, string> = {
-    draft: 'bg-surface-100 text-surface-700',
-    submitted: 'bg-amber-100 text-amber-800',
-    approved: 'bg-emerald-100 text-emerald-800',
-    ordered: 'bg-blue-100 text-blue-800',
-    received: 'bg-violet-100 text-violet-800',
-  };
-
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 ledger-section pb-6 border-b-0">
         <div>
           <Link to={isApprover ? '/queues/submitted' : '/requisitions'} className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-2 inline-block">
             &larr; Back
           </Link>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{requisition.title}</h1>
-            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${statusColors[requisition.status] || 'bg-surface-100 text-surface-700'}`}>
-              {requisition.status}
-            </span>
+          <div className="flex items-center gap-4 mt-2">
+            <h1 className="text-3xl font-serif text-surface-900">{requisition.title}</h1>
+            <StatusDot status={requisition.status} />
+            {requisition.archived_at && (
+              <span className="text-[10px] font-medium text-surface-500 uppercase tracking-widest">
+                (Archived)
+              </span>
+            )}
           </div>
-          <p className="text-surface-500 mt-1 text-sm">
+          <p className="text-surface-500 mt-2 text-sm">
             By {requisition.owner?.name || 'Unknown'} &middot; Created {new Date(requisition.created_at).toLocaleDateString()}
           </p>
         </div>
@@ -283,6 +281,19 @@ export default function RequisitionDetailPage() {
             <button onClick={() => setShowExtendDate(true)} disabled={actionLoading} className="btn-secondary text-sm">
               Extend Needed-By Date
             </button>
+          )}
+          
+          {/* Archive / Restore Buttons (Owner or Approver) */}
+          {(isOwner || isApprover) && (
+            requisition.archived_at ? (
+              <button onClick={handleRestore} disabled={actionLoading} className="btn-secondary text-sm">
+                Restore
+              </button>
+            ) : (
+              <button onClick={handleArchive} disabled={actionLoading} className="btn-ghost text-surface-500 hover:text-surface-900 text-sm">
+                Archive
+              </button>
+            )
           )}
         </div>
       </div>
@@ -336,34 +347,34 @@ export default function RequisitionDetailPage() {
       )}
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card p-5">
-          <p className="text-xs font-medium text-surface-500 uppercase tracking-wider mb-1">Vendor</p>
-          <p className="font-medium text-surface-900">{requisition.vendor_name}</p>
+      <div className="flex flex-col sm:flex-row border-y border-surface-200">
+        <div className="flex-1 py-5 sm:border-r border-surface-200 sm:pr-5">
+          <p className="text-xs font-medium text-surface-500 mb-1">Vendor</p>
+          <p className="font-serif text-lg text-surface-900">{requisition.vendor_name}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-medium text-surface-500 uppercase tracking-wider mb-1">Department</p>
-          <p className="font-medium text-surface-900">{requisition.department}</p>
+        <div className="flex-1 py-5 sm:border-r border-surface-200 sm:px-5">
+          <p className="text-xs font-medium text-surface-500 mb-1">Department</p>
+          <p className="font-serif text-lg text-surface-900">{requisition.department}</p>
         </div>
-        <div className="card p-5">
-          <p className="text-xs font-medium text-surface-500 uppercase tracking-wider mb-1">Needed By</p>
-          <p className="font-medium text-surface-900">
+        <div className="flex-1 py-5 sm:pl-5">
+          <p className="text-xs font-medium text-surface-500 mb-1">Needed By</p>
+          <p className="font-serif text-lg text-surface-900 tabular-nums">
             {new Date(requisition.needed_by_date).toLocaleDateString()}
           </p>
         </div>
       </div>
 
       {/* Assigned Approvers */}
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-200 bg-surface-50 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-surface-900">Assigned Approvers</h2>
+      <div className="ledger-section pt-0">
+        <div className="py-4 flex items-center justify-between">
+          <h2 className="text-lg font-serif text-surface-900">Assigned Approvers</h2>
           {isApprover && (
             <button onClick={() => setShowAddApprover(!showAddApprover)} className="btn-primary py-1.5 px-3 text-xs">
               {showAddApprover ? 'Cancel' : '+ Assign Approver'}
             </button>
           )}
         </div>
-        <div className="p-6">
+        <div>
           {showAddApprover && isApprover && (
             <div className="flex gap-2 mb-4 items-end">
               <div className="flex-1">
@@ -376,13 +387,13 @@ export default function RequisitionDetailPage() {
           {requisition.approvers && requisition.approvers.length > 0 ? (
             <div className="space-y-2">
               {requisition.approvers.map((a: any) => (
-                <div key={a.approver.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-50">
+                <div key={a.approver.id} className="flex items-center justify-between px-3 py-2 rounded-md border border-surface-200 bg-surface-50">
                   <div>
                     <span className="text-sm font-medium text-surface-900">{a.approver.name}</span>
                     <span className="text-xs text-surface-500 ml-2">{a.approver.email}</span>
                   </div>
                   {isApprover && (
-                    <button onClick={() => handleRemoveApprover(a.approver.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Remove</button>
+                    <button onClick={() => handleRemoveApprover(a.approver.id)} className="text-[#8C3B3B] hover:text-[#7a3232] text-xs font-medium">Remove</button>
                   )}
                 </div>
               ))}
@@ -394,9 +405,9 @@ export default function RequisitionDetailPage() {
       </div>
 
       {/* Line Items */}
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-200 bg-surface-50 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-surface-900">Line Items</h2>
+      <div className="ledger-section pt-0">
+        <div className="py-4 flex items-center justify-between">
+          <h2 className="text-lg font-serif text-surface-900">Line Items</h2>
           {isDraft && isOwner && editingLineId === null && (
             <button onClick={() => setEditingLineId('new')} className="btn-primary py-1.5 px-3 text-xs">
               + Add Item
@@ -406,13 +417,13 @@ export default function RequisitionDetailPage() {
 
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-surface-200 text-surface-600 bg-white">
-              <th className="px-6 py-3 text-sm font-medium">Description</th>
-              <th className="px-6 py-3 text-sm font-medium text-right">Qty</th>
-              <th className="px-6 py-3 text-sm font-medium text-right">Unit Price</th>
-              <th className="px-6 py-3 text-sm font-medium text-right">Line Total</th>
-              {isOrdered && <th className="px-6 py-3 text-sm font-medium text-right">Received</th>}
-              <th className="px-6 py-3"></th>
+            <tr className="border-b border-surface-200 text-surface-600">
+              <th className="py-3 pr-4 text-sm font-medium">Description</th>
+              <th className="px-4 py-3 text-sm font-medium text-right">Qty</th>
+              <th className="px-4 py-3 text-sm font-medium text-right">Unit Price</th>
+              <th className="px-4 py-3 text-sm font-medium text-right">Line Total</th>
+              {isOrdered && <th className="px-4 py-3 text-sm font-medium text-right">Received</th>}
+              <th className="py-3 pl-4"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100">
@@ -448,20 +459,20 @@ export default function RequisitionDetailPage() {
 
               return (
                 <tr key={line.id}>
-                  <td className="px-6 py-4 text-sm text-surface-900">{line.description}</td>
-                  <td className="px-6 py-4 text-sm text-surface-600 text-right">{Number(line.ordered_qty).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-surface-600 text-right">${Number(line.unit_price).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm text-surface-900 font-medium text-right">
+                  <td className="py-4 pr-4 text-sm text-surface-900">{line.description}</td>
+                  <td className="px-4 py-4 text-sm text-surface-600 text-right tabular-nums">{Number(line.ordered_qty).toFixed(2)}</td>
+                  <td className="px-4 py-4 text-sm text-surface-600 text-right tabular-nums">${Number(line.unit_price).toFixed(2)}</td>
+                  <td className="px-4 py-4 text-sm text-surface-900 font-medium text-right tabular-nums">
                     ${(Number(line.ordered_qty) * Number(line.unit_price)).toFixed(2)}
                   </td>
                   {isOrdered && (
-                    <td className="px-6 py-4 text-sm text-right">
-                      <span className={`font-medium ${Number(line.received_qty) >= Number(line.ordered_qty) ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    <td className="px-4 py-4 text-sm text-right tabular-nums">
+                      <span className={`font-medium ${Number(line.received_qty) >= Number(line.ordered_qty) ? 'text-[#4A6B53]' : 'text-[#9B761E]'}`}>
                         {Number(line.received_qty).toFixed(2)} / {Number(line.ordered_qty).toFixed(2)}
                       </span>
                     </td>
                   )}
-                  <td className="px-6 py-4 text-right">
+                  <td className="py-4 pl-4 text-right">
                     <div className="flex justify-end gap-3">
                       {isDraft && isOwner && (
                         <>
@@ -523,9 +534,9 @@ export default function RequisitionDetailPage() {
             )}
 
             {/* Total Row */}
-            <tr className="bg-surface-50 font-semibold border-t-2 border-surface-200">
-              <td colSpan={3} className="px-6 py-4 text-right text-surface-700">Requisition Total:</td>
-              <td className="px-6 py-4 text-right text-lg text-surface-900">${Number(requisition.total).toFixed(2)}</td>
+            <tr className="border-t-2 border-surface-200">
+              <td colSpan={3} className="py-4 pr-4 text-right text-surface-700 font-medium">Requisition Total:</td>
+              <td className="px-4 py-4 text-right font-serif text-lg text-surface-900 tabular-nums">${Number(requisition.total).toFixed(2)}</td>
               {isOrdered && <td></td>}
               <td></td>
             </tr>
@@ -534,11 +545,11 @@ export default function RequisitionDetailPage() {
       </div>
 
       {/* Timeline / Audit Log */}
-      <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-surface-200 bg-surface-50">
-          <h2 className="text-lg font-semibold text-surface-900">Timeline</h2>
+      <div className="ledger-section pt-0 border-b-0 pb-0">
+        <div className="py-4">
+          <h2 className="text-lg font-serif text-surface-900">Timeline</h2>
         </div>
-        <div className="p-6">
+        <div>
           {auditEvents.length === 0 ? (
             <p className="text-sm text-surface-500">No events yet.</p>
           ) : (

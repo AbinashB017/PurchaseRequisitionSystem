@@ -3,10 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Main app shell with navigation bar.
- * Includes placeholder for alert badge (to be wired in a later phase).
+ * Live alert badge wired to AuthContext alertCount for approvers.
  */
 export default function AppLayout() {
-  const { user, logout } = useAuth();
+  const { user, logout, alertCount } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,13 +20,13 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-surface-50">
       {/* Navigation */}
-      <nav className="bg-white border-b border-surface-200 sticky top-0 z-50">
+      <nav className="bg-surface-50 border-b border-surface-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo & nav links */}
             <div className="flex items-center gap-8">
               <Link to="/" className="flex items-center gap-2.5 group">
-                <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center shadow-soft group-hover:shadow-medium transition-shadow">
+                <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center transition-shadow">
                   <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
                   </svg>
@@ -34,13 +34,13 @@ export default function AppLayout() {
                 <span className="font-semibold text-surface-900 text-base">ProcureFlow</span>
               </Link>
 
-              <div className="hidden sm:flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-6">
                 <Link
                   to="/"
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
                     isActive('/')
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                      ? 'border-brand-600 text-surface-900 font-medium'
+                      : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
                   }`}
                 >
                   Dashboard
@@ -49,10 +49,10 @@ export default function AppLayout() {
                 {user?.role === 'requester' && (
                   <Link
                     to="/requisitions"
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
                       location.pathname.startsWith('/requisitions')
-                        ? 'bg-brand-50 text-brand-700'
-                        : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                        ? 'border-brand-600 text-surface-900 font-medium'
+                        : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
                     }`}
                   >
                     My Requisitions
@@ -63,23 +63,38 @@ export default function AppLayout() {
                   <>
                     <Link
                       to="/queues/submitted"
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
                         location.pathname === '/queues/submitted'
-                          ? 'bg-brand-50 text-brand-700'
-                          : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                          ? 'border-brand-600 text-surface-900 font-medium'
+                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
                       }`}
                     >
                       Submitted Queue
                     </Link>
                     <Link
                       to="/queues/assigned"
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
                         location.pathname === '/queues/assigned'
-                          ? 'bg-brand-50 text-brand-700'
-                          : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100'
+                          ? 'border-brand-600 text-surface-900 font-medium'
+                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
                       }`}
                     >
                       Assigned to Me
+                    </Link>
+                    <Link
+                      to="/alerts"
+                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 inline-flex items-center gap-1.5 ${
+                        isActive('/alerts')
+                          ? 'border-red-600 text-red-700 font-medium'
+                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
+                      }`}
+                    >
+                      Alerts
+                      {alertCount > 0 && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#8C3B3B] text-white text-[10px] font-bold leading-none">
+                          {alertCount > 99 ? '99+' : alertCount}
+                        </span>
+                      )}
                     </Link>
                   </>
                 )}

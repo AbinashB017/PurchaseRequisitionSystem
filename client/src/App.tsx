@@ -10,6 +10,7 @@ import RequisitionsPage from './pages/RequisitionsPage';
 import RequisitionFormPage from './pages/RequisitionFormPage';
 import RequisitionDetailPage from './pages/RequisitionDetailPage';
 import ApproverQueuePage from './pages/ApproverQueuePage';
+import AlertsPage from './pages/AlertsPage';
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/requisitions/:id/edit" element={<RequisitionFormPage />} />
             <Route path="/queues/submitted" element={<ApproverQueuePage />} />
             <Route path="/queues/assigned" element={<ApproverQueuePage assignedOnly />} />
+            <Route path="/alerts" element={<AlertsPage />} />
           </Route>
 
           {/* Catch-all */}

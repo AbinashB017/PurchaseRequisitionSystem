@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authApi } from '../lib/api';
+import { authApi, dashboardApi } from '../lib/api';
 
 export interface User {
   id: string;
@@ -12,6 +12,8 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  alertCount: number;
+  refreshAlertCount: () => void;
   login: (email: string, password: string) => Promise<string | null>;
   register: (data: {
     email: string;
@@ -28,11 +30,30 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [alertCount, setAlertCount] = useState(0);
 
   // Check session on mount
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Poll alert count for approvers every 60 seconds
+  useEffect(() => {
+    if (user?.role !== 'approver') {
+      setAlertCount(0);
+      return;
+    }
+    fetchAlertCount();
+    const interval = setInterval(fetchAlertCount, 60_000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const fetchAlertCount = async () => {
+    const res = await dashboardApi.getAlertCount();
+    if (res.ok && res.data) {
+      setAlertCount((res.data as any).count ?? 0);
+    }
+  };
 
   const checkAuth = async () => {
     try {
@@ -77,10 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
+    setAlertCount(0);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, alertCount, refreshAlertCount: fetchAlertCount, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

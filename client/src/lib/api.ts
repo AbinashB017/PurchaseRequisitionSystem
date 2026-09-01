@@ -81,7 +81,11 @@ export const authApi = {
 };
 
 export const requisitionApi = {
-  listMyRequisitions: () => request('/api/requisitions'),
+  /** Server-side search/filter/sort/paginate. Returns { data, meta } */
+  list: (params: Record<string, string>) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/requisitions${qs ? '?' + qs : ''}`);
+  },
   getRequisition: (id: string) => request(`/api/requisitions/${id}`),
   create: (body: any) => request('/api/requisitions', { method: 'POST', body }),
   update: (id: string, body: any) => request(`/api/requisitions/${id}`, { method: 'PUT', body }),
@@ -91,6 +95,8 @@ export const requisitionApi = {
 
   // Lifecycle actions
   submit: (id: string) => request(`/api/requisitions/${id}/submit`, { method: 'POST' }),
+  archive: (id: string) => request(`/api/requisitions/${id}/archive`, { method: 'POST' }),
+  restore: (id: string) => request(`/api/requisitions/${id}/restore`, { method: 'POST' }),
   approve: (id: string) => request(`/api/requisitions/${id}/approve`, { method: 'POST' }),
   reject: (id: string, reason: string) => request(`/api/requisitions/${id}/reject`, { method: 'POST', body: { reason } }),
   order: (id: string) => request(`/api/requisitions/${id}/order`, { method: 'POST' }),
@@ -108,8 +114,29 @@ export const requisitionApi = {
 };
 
 export const queueApi = {
-  getSubmittedQueue: () => request('/api/queues/submitted'),
-  getAssignedToMe: () => request('/api/queues/assigned-to-me'),
+  /** Paginated submitted queue */
+  getSubmittedQueue: (params: Record<string, string> = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/queues/submitted${qs ? '?' + qs : ''}`);
+  },
+  /** Paginated assigned-to-me queue */
+  getAssignedToMe: (params: Record<string, string> = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/api/queues/assigned-to-me${qs ? '?' + qs : ''}`);
+  },
+  /** Bulk approve: returns { approved, refused, summary } */
+  bulkApprove: (ids: string[]) => request('/api/bulk-approve', { method: 'POST', body: { ids } }),
+  /** CSV export URL (direct browser download) */
+  exportOrderedCsvUrl: () => `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/export/ordered.csv`,
+};
+
+export const dashboardApi = {
+  getDashboard: () => request('/api/dashboard'),
+  getAlerts: () => request('/api/alerts'),
+  getAlertCount: () => request('/api/alerts/count'),
+  dismiss: (requisitionId: string) =>
+    request(`/api/alerts/${requisitionId}/dismiss`, { method: 'POST' }),
 };
 
 export default request;
+
