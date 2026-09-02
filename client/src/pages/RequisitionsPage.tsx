@@ -4,6 +4,7 @@ import { requisitionApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import StatusDot from '../components/StatusDot';
 
+
 const STATUS_OPTIONS = ['draft', 'submitted', 'approved', 'ordered', 'received'];
 
 type SortField = 'needed_by_date' | 'status' | 'created_at' | 'total';
@@ -29,8 +30,13 @@ export default function RequisitionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Local search input state (debounced before pushing to URL)
+  // Local input state — only written to URL on submit/blur, never on every keystroke.
+  // This is critical: if these were URL-bound on onChange, navigating from the dashboard
+  // to /requisitions?status=draft would still work (clean URL), but any pending local
+  // state from a previous visit would silently survive component re-use in the same
+  // React Router session and combine with the incoming filter.
   const [qInput, setQInput] = useState(q);
+  const [deptInput, setDeptInput] = useState(department);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -55,8 +61,9 @@ export default function RequisitionsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Keep local input in sync when URL changes externally
+  // Sync local inputs whenever the URL changes (e.g. dashboard navigation replaces URL)
   useEffect(() => { setQInput(q); }, [q]);
+  useEffect(() => { setDeptInput(department); }, [department]);
 
   const updateParams = (updates: Record<string, string>) => {
     setSearchParams(prev => {
@@ -101,8 +108,12 @@ export default function RequisitionsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1>My Requisitions</h1>
-          <p className="mt-1 text-surface-500">Manage your purchase requests.</p>
+          <h1>{user?.role === 'approver' ? 'All Requisitions' : 'My Requisitions'}</h1>
+          <p className="mt-1 text-surface-500">
+            {user?.role === 'approver'
+              ? 'Browse and search all requisitions across every status.'
+              : 'Manage your purchase requests.'}
+          </p>
         </div>
         {user?.role === 'requester' && (
           <Link to="/requisitions/new" className="btn-primary">
@@ -145,11 +156,13 @@ export default function RequisitionsPage() {
             ))}
           </select>
 
-          {/* Department filter */}
+          {/* Department filter — committed on blur or Enter, not on every keystroke */}
           <input
             type="text"
-            value={department}
-            onChange={e => updateParams({ department: e.target.value })}
+            value={deptInput}
+            onChange={e => setDeptInput(e.target.value)}
+            onBlur={() => updateParams({ department: deptInput })}
+            onKeyDown={e => { if (e.key === 'Enter') updateParams({ department: deptInput }); }}
             placeholder="Department..."
             className="input py-1.5 text-sm w-40"
           />

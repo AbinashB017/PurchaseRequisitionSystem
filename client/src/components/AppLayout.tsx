@@ -62,6 +62,16 @@ export default function AppLayout() {
                 {user?.role === 'approver' && (
                   <>
                     <Link
+                      to="/requisitions"
+                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
+                        location.pathname === '/requisitions' || (location.pathname.startsWith('/requisitions/') && !location.pathname.endsWith('/new'))
+                          ? 'border-brand-600 text-surface-900 font-medium'
+                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
+                      }`}
+                    >
+                      All Requisitions
+                    </Link>
+                    <Link
                       to="/queues/submitted"
                       className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
                         location.pathname === '/queues/submitted'
