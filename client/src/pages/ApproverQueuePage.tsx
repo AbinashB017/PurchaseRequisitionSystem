@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { queueApi } from '../lib/api';
-import StatusDot from '../components/StatusDot';
+
 
 interface Props {
   assignedOnly?: boolean;
