@@ -172,4 +172,23 @@ router.get('/me', requireAuth, (req: Request, res: Response): void => {
   res.json({ user: req.user });
 });
 
+/**
+ * GET /api/auth/approvers
+ * Authenticated users only. Returns all users with role=approver,
+ * used to populate the approver-assignment dropdown on the detail page.
+ */
+router.get('/approvers', requireAuth, async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const approvers = await prisma.user.findMany({
+      where: { role: 'approver' },
+      select: { id: true, name: true, email: true, approval_limit: true },
+      orderBy: { name: 'asc' },
+    });
+    res.json(approvers);
+  } catch (err) {
+    console.error('List approvers error:', err);
+    res.status(500).json({ error: 'Failed to list approvers' });
+  }
+});
+
 export default router;

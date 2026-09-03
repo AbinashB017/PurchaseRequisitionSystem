@@ -138,5 +138,10 @@ export const dashboardApi = {
     request(`/api/alerts/${requisitionId}/dismiss`, { method: 'POST' }),
 };
 
+export const userApi = {
+  /** Returns all approver users (for assignment dropdown) */
+  listApprovers: () => request('/api/auth/approvers'),
+};
+
 export default request;
 

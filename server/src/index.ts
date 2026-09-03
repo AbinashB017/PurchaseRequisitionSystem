@@ -13,6 +13,17 @@ import dashboardRoutes from './routes/dashboard';
 // Load environment variables
 dotenv.config();
 
+// Fail loudly if critical env vars are missing in production
+const JWT_SECRET_CHECK = process.env.JWT_SECRET;
+if (!JWT_SECRET_CHECK) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Refusing to start in production.');
+    process.exit(1);
+  } else {
+    console.warn('WARNING: JWT_SECRET is not set. Using insecure fallback — DO NOT use in production.');
+  }
+}
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '4000', 10);
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';

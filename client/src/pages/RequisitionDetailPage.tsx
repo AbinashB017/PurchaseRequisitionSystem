@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { requisitionApi } from '../lib/api';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { requisitionApi, userApi } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import StatusDot from '../components/StatusDot';
 
 export default function RequisitionDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [requisition, setRequisition] = useState<any>(null);
   const [auditEvents, setAuditEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,11 +65,12 @@ export default function RequisitionDetailPage() {
     fetchData();
   }, [fetchData]);
 
-  // Fetch all approver users (for assignment dropdown)
+  // Fetch all approver users for the assignment dropdown
   useEffect(() => {
     if (user?.role === 'approver') {
-      // We'll use the auth API to list approvers - but we don't have that endpoint yet
-      // For now, we'll use the approver list from the requisition data
+      userApi.listApprovers().then(res => {
+        if (res.ok && res.data) setAllApprovers(res.data as any[]);
+      });
     }
   }, [user]);
 
@@ -235,9 +237,12 @@ export default function RequisitionDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 ledger-section pb-6 border-b-0">
         <div>
-          <Link to={isApprover ? '/queues/submitted' : '/requisitions'} className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-2 inline-block">
+          <button
+            onClick={() => navigate(-1)}
+            className="text-brand-600 hover:text-brand-700 text-sm font-medium mb-2 inline-block"
+          >
             &larr; Back
-          </Link>
+          </button>
           <div className="flex items-center gap-4 mt-2">
             <h1 className="text-3xl font-serif text-surface-900">{requisition.title}</h1>
             <StatusDot status={requisition.status} />
@@ -264,16 +269,16 @@ export default function RequisitionDetailPage() {
           )}
           {isSubmitted && isApprover && (
             <>
-              <button onClick={handleApprove} disabled={actionLoading} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <button onClick={handleApprove} disabled={actionLoading} className="btn-primary text-sm">
                 Approve
               </button>
-              <button onClick={() => setShowRejectModal(true)} disabled={actionLoading} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <button onClick={() => setShowRejectModal(true)} disabled={actionLoading} className="bg-[#8C3B3B] hover:bg-[#7a3232] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 Reject
               </button>
             </>
           )}
           {isApproved && isApprover && (
-            <button onClick={handleOrder} disabled={actionLoading} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <button onClick={handleOrder} disabled={actionLoading} className="btn-primary text-sm">
               Mark as Ordered
             </button>
           )}
@@ -378,8 +383,23 @@ export default function RequisitionDetailPage() {
           {showAddApprover && isApprover && (
             <div className="flex gap-2 mb-4 items-end">
               <div className="flex-1">
-                <label className="label text-xs">Approver User ID</label>
-                <input type="text" value={selectedApproverId} onChange={(e) => setSelectedApproverId(e.target.value)} placeholder="Paste the approver's user ID" className="input py-1.5 text-sm" />
+                <label className="label text-xs">Select Approver</label>
+                <select
+                  value={selectedApproverId}
+                  onChange={(e) => setSelectedApproverId(e.target.value)}
+                  className="input py-1.5 text-sm"
+                >
+                  <option value="">— choose an approver —</option>
+                  {allApprovers
+                    .filter((a: any) => !requisition.approvers?.some((ra: any) => ra.approver.id === a.id))
+                    .map((a: any) => (
+                      <option key={a.id} value={a.id}>
+                        {a.name} ({a.email})
+                        {a.approval_limit ? ` · limit $${Number(a.approval_limit).toLocaleString()}` : ''}
+                      </option>
+                    ))
+                  }
+                </select>
               </div>
               <button onClick={handleAddApprover} disabled={!selectedApproverId} className="btn-primary py-1.5 px-3 text-sm disabled:opacity-50">Add</button>
             </div>

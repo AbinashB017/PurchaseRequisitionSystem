@@ -105,7 +105,7 @@ router.post('/bulk-approve', requireRole('approver'), async (req: Request, res: 
 router.get('/export/ordered.csv', requireRole('approver'), async (_req: Request, res: Response): Promise<void> => {
   try {
     const requisitions = await prisma.requisition.findMany({
-      where: { status: 'ordered' },
+      where: { status: 'ordered', archived_at: null },
       include: {
         line_items: true,
         owner: { select: { name: true, email: true } },

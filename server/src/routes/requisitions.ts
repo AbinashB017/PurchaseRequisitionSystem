@@ -80,11 +80,8 @@ function buildWhereClause(
   }
 
   // Overdue: ordered + needed_by_date < today
+  // Uses AND to safely combine with any other existing where conditions
   if (params.overdue === 'true') {
-    where.status = 'ordered';
-    where.needed_by_date = { lt: new Date() };
-    // Clear any status filter if overdue is set (overdue implies status=ordered)
-    delete (where as any).status;
     where.AND = [
       { status: 'ordered' },
       { needed_by_date: { lt: new Date() } },
