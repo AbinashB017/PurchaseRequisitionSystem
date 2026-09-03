@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: procureflow-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      # Set these in Render dashboard — do NOT commit real values here
+      - key: DATABASE_URL
+        sync: false   # Transaction pooler URL from Supabase (port 6543) + ?pgbouncer=true&connection_limit=1
+      - key: DATABASE_DIRECT_URL
+        sync: false   # Direct connection URL from Supabase (port 5432) — for migrations only
+      - key: JWT_SECRET
+        sync: false   # Random 64-char secret — generate with: openssl rand -hex 32
+      - key: CLIENT_URL
+        sync: false   # Your Vercel frontend URL, e.g. https://procureflow.vercel.app
