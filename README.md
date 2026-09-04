@@ -20,16 +20,13 @@ Built with strict role-based access controls, robust state machine logic, and a 
 ## Screenshots
 
 ### Dashboard
-*(Insert screenshot of the interactive dashboard here)*
-`![Dashboard Screenshot](./path/to/dashboard.png)`
+![Dashboard](./screenshots/dashboard.png)
 
 ### Requisition Details & Timeline
-*(Insert screenshot of the requisition detail view and audit timeline here)*
-`![Timeline Screenshot](./path/to/timeline.png)`
+![Requisition Details](./screenshots/requisition.png)
 
 ### Queues & Filtering
-*(Insert screenshot of the list view with active filters here)*
-`![Queues Screenshot](./path/to/queues.png)`
+![Queues](./screenshots/queue.png)
 
 ## Local Development Setup
 
