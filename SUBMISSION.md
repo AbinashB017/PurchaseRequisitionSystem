@@ -22,7 +22,7 @@ This submission implements all core requirements of the Purchase Requisition Sys
 - Bulk approvals and CSV export.
 - Clickable, interactive dashboard metrics.
 
-**Note on Stretch Goals:** None of the optional stretch goals (such as Email/Slack notifications, SSO integration, or PDF/receipt file uploads) were built. I focused entirely on ensuring the core state machine and dashboard UI were airtight.
+**Note on Stretch Goals:** We successfully implemented the **Mobile-friendly approval flow** stretch goal, ensuring that the entire application (including the complex dashboard and detailed requisition views) is fully responsive and usable on phone-width screens using CSS and Tailwind breakpoints. Other optional stretch goals (like Email/Slack notifications or SSO) were omitted to focus on keeping the core architecture pristine.
 
 ---
 

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -9,6 +10,7 @@ export default function AppLayout() {
   const { user, logout, alertCount } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -16,6 +18,21 @@ export default function AppLayout() {
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const navLinkClass = (active: boolean, isMobile = false) =>
+    isMobile
+      ? `block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+          active
+            ? 'bg-brand-50 text-brand-700'
+            : 'text-surface-600 hover:bg-surface-100 hover:text-surface-900'
+        }`
+      : `text-sm transition-colors pb-5 pt-5 border-b-2 ${
+          active
+            ? 'border-brand-600 text-surface-900 font-medium'
+            : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
+        }`;
+
+  const closeMobile = () => setMobileMenuOpen(false);
 
   return (
     <div className="min-h-screen bg-surface-50">
@@ -25,7 +42,7 @@ export default function AppLayout() {
           <div className="flex items-center justify-between h-16">
             {/* Left: Logo & nav links */}
             <div className="flex items-center gap-8">
-              <Link to="/" className="flex items-center gap-2.5 group">
+              <Link to="/" className="flex items-center gap-2.5 group" onClick={closeMobile}>
                 <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center transition-shadow">
                   <svg className="w-4.5 h-4.5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25Z" />
@@ -34,26 +51,16 @@ export default function AppLayout() {
                 <span className="font-semibold text-surface-900 text-base">ProcureFlow</span>
               </Link>
 
-              <div className="hidden sm:flex items-center gap-6">
-                <Link
-                  to="/"
-                  className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
-                    isActive('/')
-                      ? 'border-brand-600 text-surface-900 font-medium'
-                      : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
-                  }`}
-                >
+              {/* Desktop nav links */}
+              <div className="hidden md:flex items-center gap-6">
+                <Link to="/" className={navLinkClass(isActive('/'))}>
                   Dashboard
                 </Link>
 
                 {user?.role === 'requester' && (
                   <Link
                     to="/requisitions"
-                    className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
-                      location.pathname.startsWith('/requisitions')
-                        ? 'border-brand-600 text-surface-900 font-medium'
-                        : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
-                    }`}
+                    className={navLinkClass(location.pathname.startsWith('/requisitions'))}
                   >
                     My Requisitions
                   </Link>
@@ -63,31 +70,21 @@ export default function AppLayout() {
                   <>
                     <Link
                       to="/requisitions"
-                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
+                      className={navLinkClass(
                         location.pathname === '/requisitions' || (location.pathname.startsWith('/requisitions/') && !location.pathname.endsWith('/new'))
-                          ? 'border-brand-600 text-surface-900 font-medium'
-                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
-                      }`}
+                      )}
                     >
                       All Requisitions
                     </Link>
                     <Link
                       to="/queues/submitted"
-                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
-                        location.pathname === '/queues/submitted'
-                          ? 'border-brand-600 text-surface-900 font-medium'
-                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
-                      }`}
+                      className={navLinkClass(location.pathname === '/queues/submitted')}
                     >
                       Submitted Queue
                     </Link>
                     <Link
                       to="/queues/assigned"
-                      className={`text-sm transition-colors pb-5 pt-5 border-b-2 ${
-                        location.pathname === '/queues/assigned'
-                          ? 'border-brand-600 text-surface-900 font-medium'
-                          : 'border-transparent text-surface-600 hover:text-surface-900 hover:border-surface-300'
-                      }`}
+                      className={navLinkClass(location.pathname === '/queues/assigned')}
                     >
                       Assigned to Me
                     </Link>
@@ -111,13 +108,13 @@ export default function AppLayout() {
               </div>
             </div>
 
-            {/* Right: User info & logout */}
-            <div className="flex items-center gap-4">
+            {/* Right: User info & logout + mobile hamburger */}
+            <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end">
                 <span className="text-sm font-medium text-surface-900">{user?.name}</span>
                 <span className="text-xs text-surface-500 capitalize">{user?.role}</span>
               </div>
-              <div className="w-px h-8 bg-surface-200" />
+              <div className="hidden sm:block w-px h-8 bg-surface-200" />
               <button
                 onClick={handleLogout}
                 className="btn-ghost text-surface-500 hover:text-red-600"
@@ -127,13 +124,66 @@ export default function AppLayout() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                 </svg>
               </button>
+
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-md text-surface-600 hover:text-surface-900 hover:bg-surface-100"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-surface-200 bg-surface-50 px-4 py-3 space-y-1">
+            <Link to="/" className={navLinkClass(isActive('/'), true)} onClick={closeMobile}>
+              Dashboard
+            </Link>
+
+            {user?.role === 'requester' && (
+              <Link to="/requisitions" className={navLinkClass(location.pathname.startsWith('/requisitions'), true)} onClick={closeMobile}>
+                My Requisitions
+              </Link>
+            )}
+
+            {user?.role === 'approver' && (
+              <>
+                <Link to="/requisitions" className={navLinkClass(location.pathname === '/requisitions', true)} onClick={closeMobile}>
+                  All Requisitions
+                </Link>
+                <Link to="/queues/submitted" className={navLinkClass(location.pathname === '/queues/submitted', true)} onClick={closeMobile}>
+                  Submitted Queue
+                </Link>
+                <Link to="/queues/assigned" className={navLinkClass(location.pathname === '/queues/assigned', true)} onClick={closeMobile}>
+                  Assigned to Me
+                </Link>
+                <Link to="/alerts" className={navLinkClass(isActive('/alerts'), true)} onClick={closeMobile}>
+                  Alerts {alertCount > 0 && <span className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#8C3B3B] text-white text-[10px] font-bold">{alertCount}</span>}
+                </Link>
+              </>
+            )}
+
+            <div className="border-t border-surface-200 pt-2 mt-2">
+              <div className="px-3 py-1 text-sm text-surface-600">{user?.name} <span className="text-surface-400 capitalize">· {user?.role}</span></div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <Outlet />
       </main>
     </div>

@@ -78,7 +78,7 @@ export default function AlertsPage() {
             return (
               <div
                 key={alert.id}
-                className="ledger-section border-l-4 border-l-[#8C3B3B] p-5 flex items-start justify-between gap-4"
+                className="ledger-section border-l-4 border-l-[#8C3B3B] p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4"
               >
                 <div className="flex items-start gap-4 min-w-0">
                   {/* Alert Icon */}
@@ -111,10 +111,10 @@ export default function AlertsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex sm:items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                   <Link
                     to={`/requisitions/${alert.id}`}
-                    className="btn-secondary py-1.5 px-3 text-xs"
+                    className="btn-secondary py-1.5 px-3 text-xs flex-1 sm:flex-none text-center"
                   >
                     View
                   </Link>

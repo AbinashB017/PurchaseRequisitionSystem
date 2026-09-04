@@ -106,7 +106,7 @@ export default function RequisitionsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1>{user?.role === 'approver' ? 'All Requisitions' : 'My Requisitions'}</h1>
           <p className="mt-1 text-surface-500">
@@ -116,7 +116,7 @@ export default function RequisitionsPage() {
           </p>
         </div>
         {user?.role === 'requester' && (
-          <Link to="/requisitions/new" className="btn-primary">
+          <Link to="/requisitions/new" className="btn-primary self-start sm:self-auto">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
@@ -213,6 +213,8 @@ export default function RequisitionsPage() {
           </div>
         )}
 
+        {/* Desktop table */}
+        <div className="hidden md:block">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-surface-200">
@@ -293,6 +295,43 @@ export default function RequisitionsPage() {
             )}
           </tbody>
         </table>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="md:hidden">
+          {loading ? (
+            <p className="px-4 py-8 text-center text-surface-400 text-sm">Loading...</p>
+          ) : error ? (
+            <p className="px-4 py-8 text-center text-red-500 text-sm">{error}</p>
+          ) : requisitions.length === 0 ? (
+            <p className="px-4 py-8 text-center text-surface-500 text-sm">No requisitions match your filters.</p>
+          ) : (
+            <div className="divide-y divide-surface-200">
+              {requisitions.map((req) => {
+                const isOverdue = req.status === 'ordered' && new Date(req.needed_by_date) < new Date();
+                return (
+                  <Link key={req.id} to={`/requisitions/${req.id}`} className="block px-4 py-4 hover:bg-surface-50 transition-colors">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-surface-900 truncate">
+                          {req.title}
+                          {isOverdue && <span className="ml-2 text-xs font-medium text-[#8C3B3B]">Overdue</span>}
+                        </p>
+                        <p className="text-xs text-surface-500 mt-1">{req.vendor_name}</p>
+                      </div>
+                      <span className="text-sm font-medium text-surface-900 tabular-nums shrink-0">${Number(req.total).toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <StatusDot status={req.status} />
+                      <span className="text-xs text-surface-500 tabular-nums">Due {new Date(req.needed_by_date).toLocaleDateString()}</span>
+                      {req.archived_at && <span className="text-[10px] font-medium text-surface-500 uppercase">(Archived)</span>}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Pagination */}
         {meta && meta.totalPages > 1 && (

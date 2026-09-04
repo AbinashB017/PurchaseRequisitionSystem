@@ -206,13 +206,13 @@ export default function ApproverQueuePage({ assignedOnly = false }: Props) {
 
       {/* Search */}
       <div className="ledger-section pb-4">
-        <form onSubmit={handleSearchSubmit} className="flex gap-2">
+        <form onSubmit={handleSearchSubmit} className="flex flex-wrap gap-2">
           <input
             type="text"
             value={qInput}
             onChange={e => setQInput(e.target.value)}
             placeholder="Search title or vendor..."
-            className="input flex-1"
+            className="input flex-1 min-w-[180px]"
           />
           <button type="submit" className="btn-primary px-5">Search</button>
           {q && (
@@ -221,7 +221,7 @@ export default function ApproverQueuePage({ assignedOnly = false }: Props) {
             </button>
           )}
           {/* Archived toggle */}
-          <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer select-none ml-2 mr-2">
+          <label className="flex items-center gap-2 text-sm text-surface-700 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={archived === 'true'}
@@ -251,6 +251,8 @@ export default function ApproverQueuePage({ assignedOnly = false }: Props) {
           </div>
         )}
 
+        {/* Desktop table */}
+        <div className="hidden md:block">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-surface-200">
@@ -323,6 +325,46 @@ export default function ApproverQueuePage({ assignedOnly = false }: Props) {
             )}
           </tbody>
         </table>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="md:hidden">
+          {loading ? (
+            <p className="px-4 py-8 text-center text-surface-400 text-sm">Loading...</p>
+          ) : error ? (
+            <p className="px-4 py-8 text-center text-red-500 text-sm">{error}</p>
+          ) : requisitions.length === 0 ? (
+            <p className="px-4 py-8 text-center text-surface-500 text-sm">
+              {assignedOnly ? 'No requisitions assigned to you.' : 'No requisitions awaiting approval.'}
+            </p>
+          ) : (
+            <div className="divide-y divide-surface-200">
+              {requisitions.map(req => (
+                <div key={req.id} className={`px-4 py-4 ${selected.has(req.id) ? 'bg-surface-100/50' : ''}`}>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(req.id)}
+                      onChange={() => toggleSelect(req.id)}
+                      className="rounded border-surface-300 text-brand-600 focus:ring-brand-500 mt-1 w-5 h-5"
+                    />
+                    <Link to={`/requisitions/${req.id}`} className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-surface-900 truncate">{req.title}</p>
+                        <span className="text-sm font-medium text-surface-900 tabular-nums shrink-0">${Number(req.total).toFixed(2)}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-surface-500">
+                        <span>{req.owner?.name || 'Unknown'}</span>
+                        <span>{req.vendor_name}</span>
+                        <span className="tabular-nums">Due {new Date(req.needed_by_date).toLocaleDateString()}</span>
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Pagination */}
         {meta && meta.totalPages > 1 && (

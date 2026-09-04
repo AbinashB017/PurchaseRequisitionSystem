@@ -258,10 +258,10 @@ export default function RequisitionDetailPage() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-2">
           {isDraft && isOwner && (
             <>
-              <Link to={`/requisitions/${id}/edit`} className="btn-secondary text-sm">Edit Details</Link>
+              <Link to={`/requisitions/${id}/edit`} className="btn-secondary text-sm text-center">Edit Details</Link>
               <button onClick={handleSubmit} disabled={actionLoading} className="btn-primary text-sm">
                 Submit for Approval
               </button>
@@ -435,6 +435,8 @@ export default function RequisitionDetailPage() {
           )}
         </div>
 
+        {/* Desktop line items table */}
+        <div className="hidden sm:block">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-surface-200 text-surface-600">
@@ -562,6 +564,108 @@ export default function RequisitionDetailPage() {
             </tr>
           </tbody>
         </table>
+        </div>
+
+        {/* Mobile line items */}
+        <div className="sm:hidden space-y-3">
+          {editingLineId === 'new' && (
+            <form onSubmit={handleSaveLine} className="p-4 rounded-lg bg-brand-50/30 border border-surface-200 space-y-3">
+              <div>
+                <label className="label text-xs">Description</label>
+                <input type="text" required autoFocus placeholder="e.g. Dell Monitor" value={lineDesc} onChange={(e) => setLineDesc(e.target.value)} className="input py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label text-xs">Qty</label>
+                  <input type="number" required min="0.01" step="0.01" placeholder="1" value={lineQty} onChange={(e) => setLineQty(e.target.value)} className="input py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="label text-xs">Price ($)</label>
+                  <input type="number" required min="0.01" step="0.01" placeholder="199.99" value={linePrice} onChange={(e) => setLinePrice(e.target.value)} className="input py-2 text-sm" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={isSubmittingLine} className="btn-primary py-2 px-4 text-sm flex-1">Save</button>
+                <button type="button" onClick={resetLineForm} className="btn-ghost py-2 px-4 text-sm">Cancel</button>
+              </div>
+            </form>
+          )}
+
+          {requisition.line_items.map((line: any) => {
+            const isEditing = editingLineId === line.id;
+            if (isEditing) {
+              return (
+                <form key={line.id} onSubmit={handleSaveLine} className="p-4 rounded-lg bg-surface-50 border border-surface-200 space-y-3">
+                  <div>
+                    <label className="label text-xs">Description</label>
+                    <input type="text" required value={lineDesc} onChange={(e) => setLineDesc(e.target.value)} className="input py-2 text-sm" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label text-xs">Qty</label>
+                      <input type="number" required min="0.01" step="0.01" value={lineQty} onChange={(e) => setLineQty(e.target.value)} className="input py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label className="label text-xs">Price ($)</label>
+                      <input type="number" required min="0.01" step="0.01" value={linePrice} onChange={(e) => setLinePrice(e.target.value)} className="input py-2 text-sm" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={isSubmittingLine} className="btn-primary py-2 px-4 text-sm flex-1">Save</button>
+                    <button type="button" onClick={resetLineForm} className="btn-ghost py-2 px-4 text-sm">Cancel</button>
+                  </div>
+                </form>
+              );
+            }
+            return (
+              <div key={line.id} className="p-3 border border-surface-200 rounded-lg">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-medium text-surface-900">{line.description}</p>
+                  <p className="text-sm font-medium text-surface-900 tabular-nums shrink-0">
+                    ${(Number(line.ordered_qty) * Number(line.unit_price)).toFixed(2)}
+                  </p>
+                </div>
+                <p className="text-xs text-surface-500 mt-1 tabular-nums">
+                  {Number(line.ordered_qty).toFixed(2)} × ${Number(line.unit_price).toFixed(2)}
+                  {isOrdered && (
+                    <span className={`ml-2 font-medium ${Number(line.received_qty) >= Number(line.ordered_qty) ? 'text-[#4A6B53]' : 'text-[#9B761E]'}`}>
+                      · Received {Number(line.received_qty).toFixed(2)}/{Number(line.ordered_qty).toFixed(2)}
+                    </span>
+                  )}
+                </p>
+                <div className="flex gap-3 mt-2">
+                  {isDraft && isOwner && (
+                    <>
+                      <button onClick={() => startEditLine(line)} className="text-brand-600 text-xs font-medium">Edit</button>
+                      <button onClick={() => handleDeleteLine(line.id)} className="text-red-600 text-xs font-medium">Remove</button>
+                    </>
+                  )}
+                  {isOrdered && isApprover && Number(line.received_qty) < Number(line.ordered_qty) && (
+                    receiveLineId === line.id ? (
+                      <div className="flex items-center gap-2 w-full">
+                        <input type="number" min="0.01" step="0.01" value={receiveQty} onChange={(e) => setReceiveQty(e.target.value)} placeholder="Qty" className="input py-1 px-2 text-sm flex-1" />
+                        <button onClick={() => handleReceive(line.id)} disabled={actionLoading} className="bg-emerald-600 text-white px-3 py-1 rounded text-xs font-medium">Receive</button>
+                        <button onClick={() => { setReceiveLineId(null); setReceiveQty(''); }} className="text-surface-500 text-xs">Cancel</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setReceiveLineId(line.id)} className="text-emerald-600 text-xs font-medium">Receive</button>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {requisition.line_items.length === 0 && editingLineId !== 'new' && (
+            <p className="py-8 text-center text-surface-500 text-sm">No line items yet.</p>
+          )}
+
+          {/* Total */}
+          <div className="border-t-2 border-surface-200 pt-3 flex items-center justify-between">
+            <span className="text-sm text-surface-700 font-medium">Requisition Total</span>
+            <span className="font-serif text-lg text-surface-900 tabular-nums">${Number(requisition.total).toFixed(2)}</span>
+          </div>
+        </div>
       </div>
 
       {/* Timeline / Audit Log */}
