@@ -41,6 +41,11 @@ async function request<T = unknown>(
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      // If token is expired/invalid, redirect to login
+      if (response.status === 401 && !endpoint.includes('/api/auth/')) {
+        window.location.href = '/login';
+        return { error: 'Session expired', status: 401, ok: false };
+      }
       return {
         error: data?.error || `Request failed with status ${response.status}`,
         status: response.status,
