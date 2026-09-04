@@ -36,6 +36,11 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Root redirect — sends anyone who hits the API domain directly to the frontend
+app.get('/', (_req, res) => {
+  res.redirect(CLIENT_URL);
+});
+
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
