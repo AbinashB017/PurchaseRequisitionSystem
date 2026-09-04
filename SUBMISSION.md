@@ -2,8 +2,7 @@
 
 ## Deployment URLs
 - **GitHub Repository:** [https://github.com/AbinashB017/PurchaseRequisitionSystem](https://github.com/AbinashB017/PurchaseRequisitionSystem)
-- **Frontend (Live Site):** [https://purchase-requisition-system-nu.vercel.app/](https://purchase-requisition-system-nu.vercel.app/)
-- **Backend API:** [https://purchaserequisitionsystem-1.onrender.com](https://purchaserequisitionsystem-1.onrender.com)
+- **Live Site:** [https://purchase-requisition-system-nu.vercel.app/](https://purchase-requisition-system-nu.vercel.app/)
 
 ## Seeded Demo Accounts
 The database is pre-seeded with the following accounts for testing (Password for all accounts is `Demo1234!`):
