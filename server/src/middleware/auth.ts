@@ -59,8 +59,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     };
 
     next();
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid or expired token' });
+  } catch (err: any) {
+    // If it's a JWT verification error, it's 401
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return;
+    }
+    // Otherwise it's likely a database connection error
+    console.error('Auth middleware error:', err);
+    res.status(500).json({ error: 'Internal server error during authentication' });
   }
 }
 
